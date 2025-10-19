@@ -11,7 +11,7 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write 'src/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts'",
-    "deploy": "npm run build && clasp push",
+    "deploy": "pnpm run build && cp appsscript.json dist/ && clasp push --force",
     "watch": "webpack --mode development --watch"
   },
   "keywords": [
@@ -42,5 +42,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "packageManager": "pnpm@9.0.0"
 }
