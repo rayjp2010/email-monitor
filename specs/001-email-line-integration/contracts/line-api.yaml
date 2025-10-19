@@ -1,0 +1,214 @@
+openapi: 3.0.3
+info:
+  title: LINE Messaging API
+  description: Contract for LINE Messaging API interactions used in Email-to-LINE system
+  version: 1.0.0
+  contact:
+    name: LINE Messaging API Documentation
+    url: https://developers.line.biz/en/reference/messaging-api/
+
+servers:
+  - url: https://api.line.me/v2/bot
+    description: LINE Messaging API Production
+
+security:
+  - BearerAuth: []
+
+paths:
+  /message/push:
+    post:
+      summary: Send push message
+      description: Sends a push message to a LINE group or user
+      operationId: pushMessage
+      tags:
+        - Messaging
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushMessageRequest'
+            examples:
+              textMessage:
+                summary: Send text message to group
+                value:
+                  to: C1234567890abcdef1234567890abcdef
+                  messages:
+                    - type: text
+                      text: |
+                        📧 New Todos from user@example.com
+
+                        1. Review pull request
+                        2. Update documentation
+                        3. Schedule team meeting
+      responses:
+        '200':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Bad Request - Invalid message format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidFormat:
+                  summary: Invalid request format
+                  value:
+                    message: The request body has 1 error(s)
+                    details:
+                      - message: May not be empty
+                        property: messages[0].text
+        '401':
+          description: Unauthorized - Invalid access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidToken:
+                  summary: Invalid or expired token
+                  value:
+                    message: Authentication failed due to the following reason -> Invalid access token
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimitExceeded:
+                  summary: Monthly message limit exceeded
+                  value:
+                    message: Messaging API exceeds the maximum number of messages
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Channel Access Token
+      description: LINE Channel Access Token (long-lived)
+
+  schemas:
+    PushMessageRequest:
+      type: object
+      required:
+        - to
+        - messages
+      properties:
+        to:
+          type: string
+          description: User ID, group ID, or room ID
+          pattern: '^[UC][0-9a-f]{32}$'
+          example: C1234567890abcdef1234567890abcdef
+        messages:
+          type: array
+          description: Array of message objects (max 5)
+          minItems: 1
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/Message'
+
+    Message:
+      type: object
+      required:
+        - type
+      discriminator:
+        propertyName: type
+      oneOf:
+        - $ref: '#/components/schemas/TextMessage'
+
+    TextMessage:
+      type: object
+      required:
+        - type
+        - text
+      properties:
+        type:
+          type: string
+          enum: [text]
+          description: Message type identifier
+        text:
+          type: string
+          description: Message text
+          minLength: 1
+          maxLength: 5000
+          example: Hello, World!
+
+    SuccessResponse:
+      type: object
+      properties:
+        sentMessages:
+          type: array
+          description: Array of sent message IDs (may be empty)
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Message ID
+      example: {}
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: The request body has 1 error(s)
+        details:
+          type: array
+          description: Detailed error information
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Specific error message
+              property:
+                type: string
+                description: Property that caused the error
+
+  examples:
+    TodoNotification:
+      summary: Todo notification message
+      value:
+        to: C1234567890abcdef1234567890abcdef
+        messages:
+          - type: text
+            text: |
+              📧 New Todos from boss@company.com
+              Subject: Weekly Tasks
+
+              ✅ Todos:
+              1. Complete quarterly report
+              2. Review team performance
+              3. Update project timeline
+
+              📅 Received: 2025-10-19 10:30 AM
+
+    MultipleMessages:
+      summary: Multiple messages in one request
+      value:
+        to: C1234567890abcdef1234567890abcdef
+        messages:
+          - type: text
+            text: "Message 1: First todo batch"
+          - type: text
+            text: "Message 2: Second todo batch"
+
+tags:
+  - name: Messaging
+    description: Send messages to LINE users and groups

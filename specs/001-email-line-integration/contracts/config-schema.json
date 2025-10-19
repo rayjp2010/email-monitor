@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/user/email-monitor/config-schema.json",
+  "title": "Email-to-LINE Configuration Schema",
+  "description": "Configuration schema for Google Apps Script Properties Service",
+  "type": "object",
+  "required": [
+    "lineAccessToken",
+    "lineGroupId",
+    "senderWhitelist",
+    "lastProcessedTime"
+  ],
+  "properties": {
+    "lineAccessToken": {
+      "type": "string",
+      "description": "LINE Messaging API Channel Access Token",
+      "minLength": 100,
+      "pattern": "^[A-Za-z0-9+/=]+$",
+      "examples": [
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      ]
+    },
+    "lineGroupId": {
+      "type": "string",
+      "description": "LINE Group ID (starts with 'C') or User ID (starts with 'U')",
+      "pattern": "^[UC][0-9a-f]{32}$",
+      "examples": [
+        "C1234567890abcdef1234567890abcdef"
+      ]
+    },
+    "senderWhitelist": {
+      "type": "array",
+      "description": "List of allowed sender email addresses",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "format": "email",
+        "examples": [
+          "user@example.com",
+          "important@company.com"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "subjectKeywords": {
+      "type": "array",
+      "description": "Optional: Filter emails by subject keywords (case-insensitive)",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100
+      },
+      "examples": [
+        ["TODO", "Action Items", "Tasks"]
+      ]
+    },
+    "extractionConfidence": {
+      "type": "number",
+      "description": "Optional: Minimum confidence threshold for todo extraction (0-1)",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.7,
+      "examples": [0.7]
+    },
+    "lastProcessedTime": {
+      "type": "integer",
+      "description": "Unix timestamp (ms) of last processed email",
+      "minimum": 0,
+      "examples": [1697721600000]
+    },
+    "maxEmailsPerRun": {
+      "type": "integer",
+      "description": "Optional: Maximum emails to process per run (prevents timeout)",
+      "minimum": 1,
+      "maximum": 500,
+      "default": 100,
+      "examples": [100]
+    },
+    "enableLogging": {
+      "type": "boolean",
+      "description": "Optional: Enable detailed logging to Google Apps Script logs",
+      "default": true
+    },
+    "retryAttempts": {
+      "type": "integer",
+      "description": "Optional: Number of retry attempts for failed LINE API calls",
+      "minimum": 0,
+      "maximum": 5,
+      "default": 3,
+      "examples": [3]
+    },
+    "retryDelayMs": {
+      "type": "integer",
+      "description": "Optional: Base delay (ms) for exponential backoff retries",
+      "minimum": 100,
+      "maximum": 10000,
+      "default": 1000,
+      "examples": [1000]
+    }
+  },
+  "examples": [
+    {
+      "lineAccessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+      "lineGroupId": "C1234567890abcdef1234567890abcdef",
+      "senderWhitelist": [
+        "boss@company.com",
+        "team-lead@company.com",
+        "project-manager@company.com"
+      ],
+      "subjectKeywords": [
+        "TODO",
+        "Action Items",
+        "Tasks"
+      ],
+      "lastProcessedTime": 1697721600000,
+      "maxEmailsPerRun": 100,
+      "enableLogging": true,
+      "retryAttempts": 3,
+      "retryDelayMs": 1000
+    }
+  ],
+  "definitions": {
+    "ConfigValidation": {
+      "description": "TypeScript interface for runtime validation",
+      "typescript": "interface AppConfig {\n  lineAccessToken: string;\n  lineGroupId: string;\n  senderWhitelist: string[];\n  subjectKeywords?: string[];\n  extractionConfidence?: number;\n  lastProcessedTime: number;\n  maxEmailsPerRun?: number;\n  enableLogging?: boolean;\n  retryAttempts?: number;\n  retryDelayMs?: number;\n}"
+    }
+  },
+  "additionalProperties": false,
+  "notes": {
+    "storage": "This configuration is stored in Google Apps Script Properties Service as a single JSON string under the key 'config'",
+    "size_limit": "Total size must be under 500KB (Properties Service limit)",
+    "security": "Never commit .clasp.json or any file containing the actual lineAccessToken value",
+    "initialization": "Use setup.ts script to initialize configuration on first deployment",
+    "updates": "Configuration can be updated via Apps Script UI or setup.ts functions"
+  }
+}
