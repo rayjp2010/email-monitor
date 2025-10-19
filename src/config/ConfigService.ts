@@ -3,16 +3,16 @@
  * Constitution compliance: No hardcoded credentials
  */
 
-import { AppConfig, isAppConfig, Result } from './types';
+import { AppConfig } from './types';
 import { logger } from '../logging/Logger';
 
 /**
  * Configuration service class
  * Manages loading and saving configuration from Google Apps Script Properties
+ * Uses individual key-value pairs instead of JSON
  */
 export class ConfigService {
   private properties: GoogleAppsScript.Properties.Properties;
-  private readonly CONFIG_KEY = 'config';
 
   constructor() {
     this.properties = PropertiesService.getScriptProperties();
@@ -20,107 +20,100 @@ export class ConfigService {
 
   /**
    * Get configuration from Script Properties
-   * @throws Error if configuration not found or invalid
+   * @throws Error if required configuration not found
    */
   public getConfig(): AppConfig {
-    const json = this.properties.getProperty(this.CONFIG_KEY);
+    logger.debug('Loading configuration from Script Properties');
 
-    if (!json) {
-      logger.error('Configuration not found in Script Properties');
-      throw new Error('Configuration not found. Run initializeConfig() first.');
+    const lineAccessToken = this.properties.getProperty('lineAccessToken');
+    const lineGroupId = this.properties.getProperty('lineGroupId');
+    const geminiApiKey = this.properties.getProperty('geminiApiKey');
+    const senderWhitelistStr = this.properties.getProperty('senderWhitelist');
+    const lastProcessedTimeStr = this.properties.getProperty('lastProcessedTime');
+    const maxEmailsPerRunStr = this.properties.getProperty('maxEmailsPerRun');
+
+    // Validate required fields
+    if (!lineAccessToken) {
+      logger.error('Missing required property: lineAccessToken');
+      throw new Error('Configuration error: lineAccessToken not found in Script Properties');
     }
 
-    let config: unknown;
-    try {
-      config = JSON.parse(json);
-    } catch (error) {
-      logger.error('Failed to parse configuration JSON', error instanceof Error ? error : undefined);
-      throw new Error('Invalid configuration format');
+    if (!lineGroupId) {
+      logger.error('Missing required property: lineGroupId');
+      throw new Error('Configuration error: lineGroupId not found in Script Properties');
     }
 
-    if (!isAppConfig(config)) {
-      logger.error('Configuration validation failed');
-      throw new Error('Invalid configuration structure');
+    if (!geminiApiKey) {
+      logger.error('Missing required property: geminiApiKey');
+      throw new Error('Configuration error: geminiApiKey not found in Script Properties');
     }
 
-    logger.debug('Configuration loaded successfully');
+    if (!senderWhitelistStr) {
+      logger.error('Missing required property: senderWhitelist');
+      throw new Error('Configuration error: senderWhitelist not found in Script Properties');
+    }
+
+    // Parse sender whitelist (comma-separated)
+    const senderWhitelist = senderWhitelistStr.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+
+    if (senderWhitelist.length === 0) {
+      logger.error('senderWhitelist is empty');
+      throw new Error('Configuration error: senderWhitelist cannot be empty');
+    }
+
+    // Parse optional fields
+    const lastProcessedTime = lastProcessedTimeStr ? parseInt(lastProcessedTimeStr, 10) : 0;
+    const maxEmailsPerRun = maxEmailsPerRunStr ? parseInt(maxEmailsPerRunStr, 10) : 100;
+
+    const config: AppConfig = {
+      lineAccessToken,
+      lineGroupId,
+      geminiApiKey,
+      senderWhitelist,
+      lastProcessedTime,
+      maxEmailsPerRun,
+    };
+
+    logger.info('Configuration loaded successfully', {
+      groupId: config.lineGroupId,
+      whitelistSize: config.senderWhitelist.length,
+      lastProcessed: new Date(config.lastProcessedTime).toISOString(),
+    });
+
     return config;
-  }
-
-  /**
-   * Save configuration to Script Properties
-   */
-  public setConfig(config: AppConfig): void {
-    const validation = this.validateConfig(config);
-
-    if (!validation.success) {
-      logger.error('Configuration validation failed', new Error(validation.error));
-      throw new Error(`Invalid configuration: ${validation.error}`);
-    }
-
-    this.properties.setProperty(this.CONFIG_KEY, JSON.stringify(config));
-    logger.info('Configuration saved successfully');
   }
 
   /**
    * Update last processed time
    */
   public updateLastProcessedTime(timestamp: number): void {
-    const config = this.getConfig();
-    config.lastProcessedTime = timestamp;
-    this.setConfig(config);
+    this.properties.setProperty('lastProcessedTime', timestamp.toString());
     logger.debug(`Updated lastProcessedTime to ${timestamp}`);
   }
 
   /**
-   * Validate configuration object
+   * Set individual property value
+   * Useful for setup/configuration
    */
-  public validateConfig(config: unknown): Result<AppConfig, string> {
-    if (!isAppConfig(config)) {
-      return { success: false, error: 'Invalid config structure' };
-    }
-
-    // Validate LINE access token format
-    if (!config.lineAccessToken || config.lineAccessToken.length < 50) {
-      return { success: false, error: 'Invalid LINE access token (too short)' };
-    }
-
-    // Validate LINE group ID format
-    if (!config.lineGroupId || !config.lineGroupId.startsWith('C')) {
-      return { success: false, error: 'Invalid LINE group ID (must start with C)' };
-    }
-
-    // Validate Gemini API key
-    if (!config.geminiApiKey || config.geminiApiKey.length < 10) {
-      return { success: false, error: 'Invalid Gemini API key' };
-    }
-
-    // Validate sender whitelist
-    if (config.senderWhitelist.length === 0) {
-      return { success: false, error: 'Sender whitelist cannot be empty' };
-    }
-
-    for (const email of config.senderWhitelist) {
-      if (!this.isValidEmail(email)) {
-        return { success: false, error: `Invalid email address: ${email}` };
-      }
-    }
-
-    // Validate optional fields
-    if (config.maxEmailsPerRun !== undefined) {
-      if (config.maxEmailsPerRun < 1) {
-        return { success: false, error: 'Max emails per run must be positive' };
-      }
-    }
-
-    return { success: true, data: config };
+  public setProperty(key: string, value: string): void {
+    this.properties.setProperty(key, value);
+    logger.info(`Set property: ${key}`);
   }
 
   /**
-   * Validate email address format
+   * Get all configured properties (for debugging)
    */
-  public isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  public listProperties(): Record<string, string> {
+    const props = this.properties.getProperties();
+    // Mask sensitive values
+    const masked: Record<string, string> = {};
+    for (const [key, value] of Object.entries(props)) {
+      if (key.includes('Token') || key.includes('Key')) {
+        masked[key] = value ? `${value.substring(0, 10)}...` : '';
+      } else {
+        masked[key] = value;
+      }
+    }
+    return masked;
   }
 }
