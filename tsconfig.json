@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2019",                          /* V8 runtime in Google Apps Script */
+    "lib": ["ES2019"],
+
+    /* Modules */
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+
+    /* Type Checking - STRICT MODE REQUIRED BY CONSTITUTION */
+    "strict": true,                              /* Enable all strict type-checking options */
+    "noImplicitAny": true,                       /* Error on expressions with implied 'any' */
+    "strictNullChecks": true,                    /* Error on null/undefined assignments */
+    "strictFunctionTypes": true,                 /* Strict checking of function types */
+    "strictPropertyInitialization": true,        /* Properties must be initialized */
+    "noImplicitThis": true,                      /* Error on 'this' with implied 'any' */
+    "alwaysStrict": true,                        /* Parse in strict mode */
+
+    /* Additional Checks */
+    "noUnusedLocals": true,                      /* Error on unused local variables */
+    "noUnusedParameters": true,                  /* Error on unused parameters */
+    "noImplicitReturns": true,                   /* Error when not all code paths return */
+    "noFallthroughCasesInSwitch": true,         /* Error on fallthrough switch cases */
+
+    /* Emit */
+    "outDir": "./dist",
+    "sourceMap": true,                           /* Generate .map files for debugging */
+    "removeComments": false,                     /* Keep comments in output */
+
+    /* Interop Constraints */
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,   /* Disallow inconsistent casing */
+    "skipLibCheck": true                         /* Skip type checking of declaration files */
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests"
+  ]
+}

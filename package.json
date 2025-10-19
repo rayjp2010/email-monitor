@@ -1,0 +1,46 @@
+{
+  "name": "email-line-monitor",
+  "version": "1.0.0",
+  "description": "Email-to-LINE Todo Notification System - Monitor Gmail inbox and forward todos to LINE groups",
+  "main": "dist/Code.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write 'src/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts'",
+    "deploy": "npm run build && clasp push",
+    "watch": "webpack --mode development --watch"
+  },
+  "keywords": [
+    "google-apps-script",
+    "gmail",
+    "line",
+    "notifications",
+    "todo",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.38.0",
+    "@google/clasp": "^3.1.0",
+    "@types/google-apps-script": "^2.0.7",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "gas-webpack-plugin": "^2.6.0",
+    "prettier": "^3.6.2",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.1",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -21,16 +21,16 @@ All paths are at repository root as this is a single Google Apps Script project.
 
 **Purpose**: Project initialization and TypeScript/Google Apps Script toolchain setup
 
-- [ ] T001 Initialize Node.js project with package.json
-- [ ] T002 [P] Install TypeScript and Google Apps Script dependencies (@google/clasp, @types/google-apps-script, typescript, webpack, webpack-cli, ts-loader, gas-webpack-plugin)
-- [ ] T003 [P] Configure TypeScript with tsconfig.json (strict mode, ES2019 target for V8 runtime)
-- [ ] T004 [P] Configure ESLint with .eslintrc.json (TypeScript rules, strict settings)
-- [ ] T005 [P] Configure Prettier with .prettierrc (formatting rules)
-- [ ] T006 [P] Configure webpack with webpack.config.js (bundle TypeScript for Apps Script)
-- [ ] T007 [P] Create appsscript.json manifest (V8 runtime, timezone configuration)
-- [ ] T008 [P] Setup .gitignore (exclude .clasp.json, .clasprc.json, node_modules, dist)
-- [ ] T009 Create project directory structure: src/{config,email,line,logging}, tests/{unit,mocks}
-- [ ] T010 [P] Add npm scripts to package.json (build, lint, type-check, deploy)
+- [x] T001 Initialize Node.js project with package.json
+- [x] T002 [P] Install TypeScript and Google Apps Script dependencies (@google/clasp, @types/google-apps-script, typescript, webpack, webpack-cli, ts-loader, gas-webpack-plugin)
+- [x] T003 [P] Configure TypeScript with tsconfig.json (strict mode, ES2019 target for V8 runtime)
+- [x] T004 [P] Configure ESLint with .eslintrc.json (TypeScript rules, strict settings)
+- [x] T005 [P] Configure Prettier with .prettierrc (formatting rules)
+- [x] T006 [P] Configure webpack with webpack.config.js (bundle TypeScript for Apps Script)
+- [x] T007 [P] Create appsscript.json manifest (V8 runtime, timezone configuration)
+- [x] T008 [P] Setup .gitignore (exclude .clasp.json, .clasprc.json, node_modules, dist)
+- [x] T009 Create project directory structure: src/{config,email,line,logging}, tests/{unit,mocks}
+- [x] T010 [P] Add npm scripts to package.json (build, lint, type-check, deploy)
 
 ---
 
@@ -40,12 +40,12 @@ All paths are at repository root as this is a single Google Apps Script project.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T011 [P] Create all TypeScript type definitions in src/config/types.ts from data-model.md (AppConfig, ConfigKeys interfaces)
-- [ ] T012 [P] Create all TypeScript type definitions in src/email/types.ts from data-model.md (EmailMessage, TodoItem interfaces)
-- [ ] T013 [P] Create all TypeScript type definitions in src/line/types.ts from data-model.md (LineTextMessage, LinePushRequest, LineApiResponse interfaces)
-- [ ] T014 [P] Create Logger class in src/logging/Logger.ts (centralized logging with log levels)
-- [ ] T015 Create ConfigService class in src/config/ConfigService.ts (load from Script Properties, validate with type guards)
-- [ ] T016 Add configuration validation methods to src/config/ConfigService.ts (validateConfig, isValidEmail, type guards)
+- [x] T011 [P] Create all TypeScript type definitions in src/config/types.ts from data-model.md (AppConfig, ConfigKeys interfaces)
+- [x] T012 [P] Create all TypeScript type definitions in src/email/types.ts from data-model.md (EmailMessage, TodoItem interfaces)
+- [x] T013 [P] Create all TypeScript type definitions in src/line/types.ts from data-model.md (LineTextMessage, LinePushRequest, LineApiResponse interfaces)
+- [x] T014 [P] Create Logger class in src/logging/Logger.ts (centralized logging with log levels)
+- [x] T015 Create ConfigService class in src/config/ConfigService.ts (load from Script Properties, validate with type guards)
+- [x] T016 Add configuration validation methods to src/config/ConfigService.ts (validateConfig, isValidEmail, type guards)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -59,21 +59,21 @@ All paths are at repository root as this is a single Google Apps Script project.
 
 ### Implementation for User Story 1
 
-- [ ] T017 [P] [US1] Create EmailService class in src/email/EmailService.ts (fetch new emails using GmailApp, filter by sender whitelist, track last processed time)
-- [ ] T018 [P] [US1] Create EmailParser class in src/email/EmailParser.ts (extract todos using multi-pattern regex from research.md)
-- [ ] T019 [P] [US1] Create LineService class in src/line/LineService.ts (push messages via UrlFetchApp, handle authentication with Bearer token)
-- [ ] T020 [P] [US1] Create MessageFormatter class in src/line/MessageFormatter.ts (format TodoItem[] into readable LINE text messages)
-- [ ] T021 [US1] Implement fetchNewEmails method in src/email/EmailService.ts (query Gmail since lastProcessedTime, return EmailMessage[])
-- [ ] T022 [US1] Implement filterBySender method in src/email/EmailService.ts (check sender against whitelist, return filtered emails)
-- [ ] T023 [US1] Implement extractTodos method in src/email/EmailParser.ts (apply numbered, bullet, action, checkbox patterns)
-- [ ] T024 [US1] Implement stripHtml and isDuplicate helper methods in src/email/EmailParser.ts
-- [ ] T025 [US1] Implement formatTodosForLine method in src/line/MessageFormatter.ts (create formatted message with sender, subject, todos list)
-- [ ] T026 [US1] Implement pushMessage method in src/line/LineService.ts (call LINE API /message/push with retry logic)
-- [ ] T027 [US1] Implement exponential backoff retry logic in src/line/LineService.ts (handle 429, 500 errors)
-- [ ] T028 [US1] Create main processEmails function in src/main.ts (orchestrate: load config → fetch emails → filter → extract → format → send)
-- [ ] T029 [US1] Add error handling and logging to src/main.ts (wrap in try-catch, log all steps, track ProcessingResult)
-- [ ] T030 [US1] Implement updateLastProcessedTime in src/config/ConfigService.ts (update config after successful processing)
-- [ ] T031 [US1] Add execution time tracking to src/main.ts (respect 6-minute Google Apps Script limit)
+- [x] T017 [P] [US1] Create EmailService class in src/email/EmailService.ts (fetch new emails using GmailApp, filter by sender whitelist, track last processed time)
+- [x] T018 [P] [US1] Create EmailParser class in src/email/EmailParser.ts (extract todos using multi-pattern regex from research.md)
+- [x] T019 [P] [US1] Create LineService class in src/line/LineService.ts (push messages via UrlFetchApp, handle authentication with Bearer token)
+- [x] T020 [P] [US1] Create MessageFormatter class in src/line/MessageFormatter.ts (format TodoItem[] into readable LINE text messages)
+- [x] T021 [US1] Implement fetchNewEmails method in src/email/EmailService.ts (query Gmail since lastProcessedTime, return EmailMessage[])
+- [x] T022 [US1] Implement filterBySender method in src/email/EmailService.ts (check sender against whitelist, return filtered emails)
+- [x] T023 [US1] Implement extractTodos method in src/email/EmailParser.ts (apply numbered, bullet, action, checkbox patterns)
+- [x] T024 [US1] Implement stripHtml and isDuplicate helper methods in src/email/EmailParser.ts
+- [x] T025 [US1] Implement formatTodosForLine method in src/line/MessageFormatter.ts (create formatted message with sender, subject, todos list)
+- [x] T026 [US1] Implement pushMessage method in src/line/LineService.ts (call LINE API /message/push with retry logic)
+- [x] T027 [US1] Implement exponential backoff retry logic in src/line/LineService.ts (handle 429, 500 errors)
+- [x] T028 [US1] Create main processEmails function in src/main.ts (orchestrate: load config → fetch emails → filter → extract → format → send)
+- [x] T029 [US1] Add error handling and logging to src/main.ts (wrap in try-catch, log all steps, track ProcessingResult)
+- [x] T030 [US1] Implement updateLastProcessedTime in src/config/ConfigService.ts (update config after successful processing)
+- [x] T031 [US1] Add execution time tracking to src/main.ts (respect 6-minute Google Apps Script limit)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - emails are monitored, todos extracted, and LINE messages sent
 
