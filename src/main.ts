@@ -22,7 +22,8 @@ function processEmail(
   geminiService: GeminiService,
   messageFormatter: MessageFormatter,
   lineService: LineService,
-  config: AppConfig
+  config: AppConfig,
+  configService: ConfigService
 ): number {
   logger.info('Processing email', { from: email.from, subject: email.subject, id: email.id });
 
@@ -35,6 +36,8 @@ function processEmail(
 
   if (todos.length === 0) {
     logger.info('No todos found in email', { emailId: email.id });
+    // Update timestamp even if no todos to avoid reprocessing
+    configService.updateLastProcessedTime(email.receivedDate.getTime());
     return 0;
   }
 
@@ -42,6 +45,8 @@ function processEmail(
 
   if (!message) {
     logger.warn('Empty message after formatting, skipping', { emailId: email.id });
+    // Update timestamp to skip this email on next run
+    configService.updateLastProcessedTime(email.receivedDate.getTime());
     return 0;
   }
 
@@ -49,9 +54,13 @@ function processEmail(
 
   if (response.status === 200) {
     logger.info('Message sent successfully to LINE', { emailId: email.id, todosCount: todos.length });
+    // Update timestamp after successful send
+    configService.updateLastProcessedTime(email.receivedDate.getTime());
   } else {
     const errorMsg = response.error?.message || 'Unknown error';
     logger.error('Failed to send message to LINE', new Error(errorMsg));
+    // Update timestamp even on failure to avoid infinite retries
+    configService.updateLastProcessedTime(email.receivedDate.getTime());
   }
 
   return todos.length;
@@ -66,6 +75,7 @@ function processFilteredEmails(
   messageFormatter: MessageFormatter,
   lineService: LineService,
   config: AppConfig,
+  configService: ConfigService,
   startTime: number
 ): number {
   let totalTodosExtracted = 0;
@@ -76,7 +86,7 @@ function processFilteredEmails(
       break;
     }
 
-    totalTodosExtracted += processEmail(email, geminiService, messageFormatter, lineService, config);
+    totalTodosExtracted += processEmail(email, geminiService, messageFormatter, lineService, config, configService);
   }
 
   return totalTodosExtracted;
@@ -124,7 +134,6 @@ function processEmails(): void {
 
     if (emails.length === 0) {
       logger.info('No emails from whitelisted senders, exiting');
-      configService.updateLastProcessedTime(new Date().getTime());
       logger.info('=== Email processing completed (no emails) ===');
       return;
     }
@@ -139,11 +148,11 @@ function processEmails(): void {
       messageFormatter,
       lineService,
       config,
+      configService,
       startTime
     );
 
     const processingEndTime = new Date().getTime();
-    configService.updateLastProcessedTime(processingEndTime);
 
     logger.info('=== Email processing completed successfully ===', {
       todosExtracted: totalTodosExtracted,
