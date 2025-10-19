@@ -13,14 +13,14 @@ export interface AppConfig {
   /** LINE Group ID to send messages to */
   lineGroupId: string;
 
+  /** Gemini API key for AI-powered todo extraction */
+  geminiApiKey: string;
+
   /** Whitelisted sender email addresses */
   senderWhitelist: string[];
 
   /** Optional: Subject keywords to filter */
   subjectKeywords?: string[];
-
-  /** Optional: Minimum confidence for todo extraction (0-1) */
-  extractionConfidence?: number;
 
   /** Last processed email timestamp (Unix ms) */
   lastProcessedTime: number;
@@ -51,6 +51,7 @@ export function isAppConfig(obj: unknown): obj is AppConfig {
     obj !== null &&
     'lineAccessToken' in obj &&
     'lineGroupId' in obj &&
+    'geminiApiKey' in obj &&
     'senderWhitelist' in obj &&
     Array.isArray((obj as AppConfig).senderWhitelist)
   );

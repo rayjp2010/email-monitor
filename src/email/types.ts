@@ -61,7 +61,7 @@ export interface TodoItem {
   extractedAt: Date;
 
   /** Pattern that matched this todo */
-  matchedPattern?: 'numbered' | 'bullet' | 'action' | 'checkbox';
+  matchedPattern?: 'numbered' | 'bullet' | 'action' | 'checkbox' | 'ai-extracted';
 }
 
 /**

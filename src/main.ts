@@ -6,7 +6,7 @@
 import { AppConfig } from './config/types';
 import { ConfigService } from './config/ConfigService';
 import { EmailService } from './email/EmailService';
-import { EmailParser } from './email/EmailParser';
+import { GeminiService } from './gemini/GeminiService';
 import { LineService } from './line/LineService';
 import { MessageFormatter } from './line/MessageFormatter';
 import { EmailMessage } from './email/types';
@@ -19,14 +19,14 @@ const MAX_EXECUTION_TIME_MS = 6 * 60 * 1000; // 6 minutes (Apps Script limit)
  */
 function processEmail(
   email: EmailMessage,
-  emailParser: EmailParser,
+  geminiService: GeminiService,
   messageFormatter: MessageFormatter,
   lineService: LineService,
   config: AppConfig
 ): number {
   logger.info('Processing email', { from: email.from, subject: email.subject, id: email.id });
 
-  const todos = emailParser.extractTodos(
+  const todos = geminiService.extractTodos(
     email.bodyHtml || email.bodyPlain,
     email.id,
     email.from,
@@ -62,7 +62,7 @@ function processEmail(
  */
 function processFilteredEmails(
   filteredEmails: EmailMessage[],
-  emailParser: EmailParser,
+  geminiService: GeminiService,
   messageFormatter: MessageFormatter,
   lineService: LineService,
   config: AppConfig,
@@ -76,7 +76,7 @@ function processFilteredEmails(
       break;
     }
 
-    totalTodosExtracted += processEmail(email, emailParser, messageFormatter, lineService, config);
+    totalTodosExtracted += processEmail(email, geminiService, messageFormatter, lineService, config);
   }
 
   return totalTodosExtracted;
@@ -132,13 +132,13 @@ function processEmails(): void {
       return;
     }
 
-    const emailParser = new EmailParser();
+    const geminiService = new GeminiService(config.geminiApiKey);
     const lineService = new LineService(config.lineAccessToken);
     const messageFormatter = new MessageFormatter();
 
     const totalTodosExtracted = processFilteredEmails(
       filteredEmails,
-      emailParser,
+      geminiService,
       messageFormatter,
       lineService,
       config,

@@ -90,6 +90,11 @@ export class ConfigService {
       return { success: false, error: 'Invalid LINE group ID (must start with C)' };
     }
 
+    // Validate Gemini API key
+    if (!config.geminiApiKey || config.geminiApiKey.length < 10) {
+      return { success: false, error: 'Invalid Gemini API key' };
+    }
+
     // Validate sender whitelist
     if (config.senderWhitelist.length === 0) {
       return { success: false, error: 'Sender whitelist cannot be empty' };
@@ -102,12 +107,6 @@ export class ConfigService {
     }
 
     // Validate optional fields
-    if (config.extractionConfidence !== undefined) {
-      if (config.extractionConfidence < 0 || config.extractionConfidence > 1) {
-        return { success: false, error: 'Extraction confidence must be between 0 and 1' };
-      }
-    }
-
     if (config.maxEmailsPerRun !== undefined) {
       if (config.maxEmailsPerRun < 1) {
         return { success: false, error: 'Max emails per run must be positive' };
