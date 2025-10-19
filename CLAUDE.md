@@ -12,7 +12,7 @@ tests/
 ```
 
 ## Commands
-npm test && npm run lint
+pnpm run type-check && pnpm run lint
 
 ## Code Style
 TypeScript 5.x with Google Apps Script runtime (V8): Follow standard conventions
