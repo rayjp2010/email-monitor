@@ -15,6 +15,40 @@ import { logger } from './logging/Logger';
 const MAX_EXECUTION_TIME_MS = 6 * 60 * 1000; // 6 minutes (Apps Script limit)
 
 /**
+ * Send run summary notification to LINE
+ */
+function sendRunSummary(
+  lineService: LineService,
+  config: AppConfig,
+  emailsFound: number,
+  todosExtracted: number,
+  executionTimeSec: string,
+  status: 'success' | 'error',
+  errorMsg?: string
+): void {
+  const statusIcon = status === 'success' ? '✅' : '❌';
+  const timestamp = new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' });
+
+  let summary = `${statusIcon} Email Monitor Run Summary\n\n`;
+  summary += `Time: ${timestamp}\n`;
+  summary += `Emails Found: ${emailsFound}\n`;
+  summary += `Todos Extracted: ${todosExtracted}\n`;
+  summary += `Execution Time: ${executionTimeSec}s\n`;
+  summary += `Status: ${status === 'success' ? 'Completed' : 'Failed'}`;
+
+  if (errorMsg) {
+    summary += `\n\nError: ${errorMsg}`;
+  }
+
+  try {
+    lineService.pushMessage(config.lineGroupId, summary);
+    logger.info('Run summary sent to LINE');
+  } catch (error) {
+    logger.error('Failed to send run summary', error instanceof Error ? error : new Error(String(error)));
+  }
+}
+
+/**
  * Process single email and send todos to LINE
  */
 function processEmail(
@@ -119,27 +153,34 @@ function processEmails(): void {
   const startTime = new Date().getTime();
   logger.info('=== Email processing started ===');
 
+  const configService = new ConfigService();
+  const config = configService.getConfig();
+  const lineService = new LineService(config.lineAccessToken);
+  const emailService = new EmailService(config.maxEmailsPerRun);
+  const emails = fetchEmails(emailService, config, startTime);
+  const geminiService = new GeminiService(config.geminiApiKey);
+  const messageFormatter = new MessageFormatter();
   try {
-    const configService = new ConfigService();
-    const config = configService.getConfig();
-
     logger.info('Configuration loaded', {
       groupId: config.lineGroupId,
       whitelistSize: config.senderWhitelist.length,
       lastProcessed: new Date(config.lastProcessedTime).toISOString(),
     });
 
-    const emailService = new EmailService(config.maxEmailsPerRun);
-    const emails = fetchEmails(emailService, config, startTime);
 
     if (emails.length === 0) {
       logger.info('No emails from whitelisted senders, exiting');
+      const processingEndTime = new Date().getTime();
+      const executionTimeSec = ((processingEndTime - startTime) / 1000).toFixed(2);
+
+      // Send summary notification
+      sendRunSummary(lineService, config, 0, 0, executionTimeSec, 'success');
+
       logger.info('=== Email processing completed (no emails) ===');
       return;
     }
 
     const geminiService = new GeminiService(config.geminiApiKey);
-    const lineService = new LineService(config.lineAccessToken);
     const messageFormatter = new MessageFormatter();
 
     const totalTodosExtracted = processFilteredEmails(
@@ -153,15 +194,21 @@ function processEmails(): void {
     );
 
     const processingEndTime = new Date().getTime();
+    const executionTimeSec = ((processingEndTime - startTime) / 1000).toFixed(2);
+
+    // Send summary notification
+    sendRunSummary(lineService, config, emails.length, totalTodosExtracted, executionTimeSec, 'success');
 
     logger.info('=== Email processing completed successfully ===', {
+      emailsFound: emails.length,
       todosExtracted: totalTodosExtracted,
-      executionTimeSec: ((processingEndTime - startTime) / 1000).toFixed(2),
+      executionTimeSec,
     });
   } catch (error) {
     const executionTimeMs = new Date().getTime() - startTime;
     logger.error('Email processing failed', error instanceof Error ? error : new Error(String(error)));
     logger.info('Execution time before error', { executionTimeSec: (executionTimeMs / 1000).toFixed(2) });
+    sendRunSummary(lineService, config, 0, 0, '0.00', 'error', error instanceof Error ? error.message : String(error));
     throw error;
   }
 }
