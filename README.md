@@ -4,7 +4,7 @@ Monitor a Gmail inbox for high-signal messages, extract actionable todos with Ge
 
 ## How It Works
 - Fetch new Gmail messages from a configurable sender whitelist.
-- Use Google Gemini (`gemini-2.0-flash-exp`) to extract todo items from each email body.
+- Use Google Gemini (`gemini-2.5-flash`) to extract todo items from each email body.
 - Format todos into a single LINE message, respecting message length constraints.
 - Push notifications to a LINE group and send a run summary (success/failure) after each execution.
 - Persist the `lastProcessedTime` so subsequent runs only handle new emails.
@@ -120,4 +120,3 @@ After the first successful run, `lastProcessedTime` is updated automatically to 
 
 ## License
 MIT License. See `LICENSE` (create one if needed) or update this section to match your chosen license.
-
