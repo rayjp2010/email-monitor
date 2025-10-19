@@ -18,19 +18,25 @@ export class EmailService {
   }
 
   /**
-   * Fetch new emails since last processed time
+   * Fetch new emails since last processed time from whitelisted senders
    * @param lastProcessedTime Unix timestamp in milliseconds
+   * @param senderWhitelist Array of allowed sender email addresses
    * @returns Array of EmailMessage objects
    */
-  public fetchNewEmails(lastProcessedTime: number): EmailMessage[] {
-    logger.info('Fetching new emails', { lastProcessedTime });
+  public fetchNewEmails(lastProcessedTime: number, senderWhitelist: string[]): EmailMessage[] {
+    logger.info('Fetching new emails from whitelisted senders', {
+      lastProcessedTime,
+      whitelistSize: senderWhitelist.length,
+    });
 
     // Convert timestamp to date for Gmail query
     const lastProcessedDate = new Date(lastProcessedTime);
     const queryDate = Utilities.formatDate(lastProcessedDate, 'GMT', 'yyyy/MM/dd');
 
-    // Build Gmail search query
-    const query = `after:${queryDate} in:inbox`;
+    // Build Gmail search query with sender filter
+    // Gmail query: "from:sender1@example.com OR from:sender2@example.com after:2025/01/01 in:inbox"
+    const senderQuery = senderWhitelist.map((sender) => `from:${sender}`).join(' OR ');
+    const query = `(${senderQuery}) after:${queryDate} in:inbox`;
 
     logger.debug('Gmail query', { query });
 
@@ -66,47 +72,7 @@ export class EmailService {
       }
     }
 
-    logger.info('Fetched emails', { count: emails.length });
+    logger.info('Fetched emails from whitelisted senders', { count: emails.length });
     return emails;
-  }
-
-  /**
-   * Filter emails by sender whitelist
-   * @param emails Array of email messages
-   * @param senderWhitelist Array of allowed sender email addresses
-   * @returns Filtered array of emails from whitelisted senders
-   */
-  public filterBySender(emails: EmailMessage[], senderWhitelist: string[]): EmailMessage[] {
-    logger.info('Filtering emails by sender whitelist', {
-      totalEmails: emails.length,
-      whitelistSize: senderWhitelist.length,
-    });
-
-    const filtered = emails.filter((email) => {
-      // Extract email address from "From" field (format: "Name <email@domain.com>")
-      const emailMatch = email.from.match(/<([^>]+)>/);
-      const senderEmail = emailMatch ? emailMatch[1] : email.from;
-
-      // Check if sender is in whitelist (case-insensitive)
-      const isAllowed = senderWhitelist.some(
-        (whitelisted) => whitelisted.toLowerCase() === senderEmail.toLowerCase()
-      );
-
-      if (!isAllowed) {
-        logger.debug('Email filtered out (sender not whitelisted)', {
-          from: senderEmail,
-          subject: email.subject,
-        });
-      }
-
-      return isAllowed;
-    });
-
-    logger.info('Sender filtering complete', {
-      allowed: filtered.length,
-      blocked: emails.length - filtered.length,
-    });
-
-    return filtered;
   }
 }

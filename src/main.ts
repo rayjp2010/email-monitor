@@ -83,25 +83,22 @@ function processFilteredEmails(
 }
 
 /**
- * Fetch and filter emails
+ * Fetch emails from whitelisted senders
  */
-function fetchAndFilterEmails(
+function fetchEmails(
   emailService: EmailService,
   config: AppConfig,
   startTime: number
 ): EmailMessage[] {
-  const allEmails = emailService.fetchNewEmails(config.lastProcessedTime);
-  logger.info('Emails fetched', { count: allEmails.length });
+  const emails = emailService.fetchNewEmails(config.lastProcessedTime, config.senderWhitelist);
+  logger.info('Emails fetched from whitelisted senders', { count: emails.length });
 
   if (new Date().getTime() - startTime > MAX_EXECUTION_TIME_MS) {
     logger.warn('Approaching execution time limit, stopping');
     return [];
   }
 
-  const filteredEmails = emailService.filterBySender(allEmails, config.senderWhitelist);
-  logger.info('Emails after filtering', { count: filteredEmails.length });
-
-  return filteredEmails;
+  return emails;
 }
 
 /**
@@ -123,9 +120,9 @@ function processEmails(): void {
     });
 
     const emailService = new EmailService(config.maxEmailsPerRun);
-    const filteredEmails = fetchAndFilterEmails(emailService, config, startTime);
+    const emails = fetchEmails(emailService, config, startTime);
 
-    if (filteredEmails.length === 0) {
+    if (emails.length === 0) {
       logger.info('No emails from whitelisted senders, exiting');
       configService.updateLastProcessedTime(new Date().getTime());
       logger.info('=== Email processing completed (no emails) ===');
@@ -137,7 +134,7 @@ function processEmails(): void {
     const messageFormatter = new MessageFormatter();
 
     const totalTodosExtracted = processFilteredEmails(
-      filteredEmails,
+      emails,
       geminiService,
       messageFormatter,
       lineService,
