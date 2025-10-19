@@ -180,9 +180,6 @@ function processEmails(): void {
       return;
     }
 
-    const geminiService = new GeminiService(config.geminiApiKey);
-    const messageFormatter = new MessageFormatter();
-
     const totalTodosExtracted = processFilteredEmails(
       emails,
       geminiService,
